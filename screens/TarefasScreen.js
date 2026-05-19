@@ -6,7 +6,7 @@ export default function TarefasScreen({ route, navigation }) {
   // Recebe o nome do usuário da tela anterior
   const { nomeUsuario } = route.params;
   const [tarefa, setTarefa] = useState('');
-  // Lista de tarefas com status (concluida ou não)
+  // Lista de tarefas com statuss (concluida ou não)
   const [tarefas, setTarefas] = useState([]);
 
   // Adiciona uma nova tarefa à lista
