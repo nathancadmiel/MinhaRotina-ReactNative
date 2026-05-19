@@ -40,7 +40,6 @@ export default function DetalhesScreen({ route, navigation }) {
           {estaConcluida && <Text style={styles.statusText}>✅ Tarefa concluída</Text>}
         </View>
 
-        // Botões para concluir (verde) e excluir (vermelho) a tarefa
         <View style={styles.buttonRow}>
           <TouchableOpacity style={styles.completeButton} activeOpacity={0.85} onPress={handleConcluir}>
             <Text style={styles.completeButtonText}>Concluir Tarefa</Text>

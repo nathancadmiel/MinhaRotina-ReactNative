@@ -4,10 +4,9 @@ import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 // Componente que renderiza cada item da lista de tarefas
 export default function TarefaItem({ item, onPress }) {
   return (
-    // Card clicável que navega para os detalhes da tarefa
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.leftRow}>
-        // Checkbox e texto da tarefa - muda visual se estiver concluída
+        
         <View style={[styles.checkboxMock, item.concluida && styles.checkboxDone]}>
           <Text style={[styles.checkDot, item.concluida && styles.checkDotDone]}>✓</Text>
         </View>

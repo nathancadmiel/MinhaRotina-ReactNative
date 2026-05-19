@@ -42,7 +42,6 @@ export default function TarefasScreen({ route, navigation }) {
           <Text style={styles.subtitle}>Falta pouco para organizar o seu dia.</Text>
         </View>
 
-        // Exibe contadores de tarefas pendentes e concluídas
         <View style={styles.statusContainer}>
           <View style={styles.statusBox}>
             <Text style={styles.statusNumber}>{tarefasPendentes}</Text>
@@ -67,7 +66,6 @@ export default function TarefasScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
 
-        // Mostra mensagem vazia se não houver tarefas, caso contrário exibe a lista
         {tarefas.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📝</Text>
@@ -75,7 +73,6 @@ export default function TarefasScreen({ route, navigation }) {
             <Text style={styles.emptySubtext}>Adicione uma tarefa acima para começar.</Text>
           </View>
         ) : (
-          // FlatList renderiza as tarefas de forma eficiente
           <FlatList
             data={tarefas}
             keyExtractor={(item) => item.id}

@@ -32,8 +32,8 @@ export default function HomeScreen({ navigation }) {
               value={nome}
               onChangeText={setNome}
             />
-            // Botão para navegar para a tela de tarefas passando o nome do usuário
-          <TouchableOpacity 
+            
+            <TouchableOpacity
               style={styles.button}
               activeOpacity={0.85}
               onPress={() => navigation.navigate('Tarefas', { nomeUsuario: nome })}
@@ -41,7 +41,6 @@ export default function HomeScreen({ navigation }) {
               <Text style={styles.buttonText}>Começar Jornada ➔</Text>
             </TouchableOpacity>
 
-            // Botão para acessar a tela com frase motivadora
             <TouchableOpacity 
               style={styles.secondaryButton}
               activeOpacity={0.85}
