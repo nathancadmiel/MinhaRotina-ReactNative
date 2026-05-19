@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Image } from 'react-native';
 
 export default function HomeScreen({ navigation }) {
+  // Estado para armazenar o nome digitado pelo usuário
   const [nome, setNome] = useState('');
 
   return (
@@ -31,12 +32,22 @@ export default function HomeScreen({ navigation }) {
               value={nome}
               onChangeText={setNome}
             />
-            <TouchableOpacity 
+            // Botão para navegar para a tela de tarefas passando o nome do usuário
+          <TouchableOpacity 
               style={styles.button}
               activeOpacity={0.85}
               onPress={() => navigation.navigate('Tarefas', { nomeUsuario: nome })}
             >
               <Text style={styles.buttonText}>Começar Jornada ➔</Text>
+            </TouchableOpacity>
+
+            // Botão para acessar a tela com frase motivadora
+            <TouchableOpacity 
+              style={styles.secondaryButton}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('FraseDoDia')}
+            >
+              <Text style={styles.secondaryButtonText}>Ver Frase do Dia</Text>
             </TouchableOpacity>
           </View>
 
@@ -58,5 +69,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '700', color: '#4B5563', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
   input: { width: '100%', height: 54, backgroundColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 16, fontSize: 16, color: '#111827', borderWidth: 1, borderColor: '#E5E7EB', marginBottom: 24 }, // Aumentado o espaço entre o input e o botão
   button: { backgroundColor: '#6366F1', width: '100%', height: 54, borderRadius: 14, justifyContent: 'center', alignItems: 'center', shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
-  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 }
+  buttonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
+  secondaryButton: { backgroundColor: '#FFFFFF', width: '100%', height: 54, borderRadius: 14, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#6366F1', marginTop: 12 },
+  secondaryButtonText: { color: '#6366F1', fontSize: 16, fontWeight: '700' }
 });

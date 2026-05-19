@@ -1,14 +1,17 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 
+// Componente que renderiza cada item da lista de tarefas
 export default function TarefaItem({ item, onPress }) {
   return (
+    // Card clicável que navega para os detalhes da tarefa
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.leftRow}>
-        <View style={styles.checkboxMock}>
-          <Text style={styles.checkDot}>✓</Text>
+        // Checkbox e texto da tarefa - muda visual se estiver concluída
+        <View style={[styles.checkboxMock, item.concluida && styles.checkboxDone]}>
+          <Text style={[styles.checkDot, item.concluida && styles.checkDotDone]}>✓</Text>
         </View>
-        <Text style={styles.text} numberOfLines={1}>{item.nome}</Text>
+        <Text style={[styles.text, item.concluida && styles.textDone]} numberOfLines={1}>{item.nome}</Text>
       </View>
       <Text style={styles.arrow}>➔</Text>
     </TouchableOpacity>
@@ -34,7 +37,10 @@ const styles = StyleSheet.create({
   },
   leftRow: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   checkboxMock: { width: 22, height: 22, borderRadius: 7, borderWidth: 2, borderColor: '#6366F1', justifyContent: 'center', alignItems: 'center', marginRight: 12 },
+  checkboxDone: { borderColor: '#10B981', backgroundColor: '#D1FAE5' },
   checkDot: { fontSize: 11, color: '#6366F1', fontWeight: '900' },
+  checkDotDone: { color: '#047857' },
   text: { flex: 1, fontSize: 16, color: '#1F2937', fontWeight: '600' },
+  textDone: { color: '#6B7280', textDecorationLine: 'line-through' },
   arrow: { fontSize: 14, color: '#9CA3AF', paddingLeft: 8 },
 });

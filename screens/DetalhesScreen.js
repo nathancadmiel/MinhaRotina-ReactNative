@@ -1,8 +1,31 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
 
 export default function DetalhesScreen({ route, navigation }) {
-  const { tarefa } = route.params;
+  // Recebe a tarefa e as funções de callback da tela anterior
+  const { tarefa, concluida, onConclude, onDelete } = route.params;
+  // Controla o estado local se a tarefa está concluída
+  const [estaConcluida, setEstaConcluida] = useState(concluida || false);
+
+  // Executa a função de concluir tarefa
+  function handleConcluir() {
+    if (estaConcluida) {
+      Alert.alert('Tarefa já concluída', 'Esta tarefa já foi marcada como concluída.');
+      return;
+    }
+    if (typeof onConclude === 'function') {
+      onConclude();
+      setEstaConcluida(true);
+    }
+  }
+
+  // Executa a função de excluir e volta para a lista
+  function handleExcluir() {
+    if (typeof onDelete === 'function') {
+      onDelete();
+    }
+    navigation.goBack();
+  }
 
   return (
     <View style={styles.outerContainer}>
@@ -14,6 +37,17 @@ export default function DetalhesScreen({ route, navigation }) {
           <Text style={styles.taskName}>{tarefa}</Text>
           <View style={styles.divider} />
           <Text style={styles.info}>✨ Esta atividade foi adicionada e faz parte das metas cruciais para manter a constância na sua rotina diária.</Text>
+          {estaConcluida && <Text style={styles.statusText}>✅ Tarefa concluída</Text>}
+        </View>
+
+        // Botões para concluir (verde) e excluir (vermelho) a tarefa
+        <View style={styles.buttonRow}>
+          <TouchableOpacity style={styles.completeButton} activeOpacity={0.85} onPress={handleConcluir}>
+            <Text style={styles.completeButtonText}>Concluir Tarefa</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.deleteButton} activeOpacity={0.85} onPress={handleExcluir}>
+            <Text style={styles.deleteButtonText}>Excluir Tarefa</Text>
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.backButton} activeOpacity={0.85} onPress={() => navigation.goBack()}>
@@ -33,6 +67,12 @@ const styles = StyleSheet.create({
   taskName: { fontSize: 26, fontWeight: '900', color: '#1F2937', textAlign: 'center' },
   divider: { width: 48, height: 4, backgroundColor: '#6366F1', borderRadius: 2, marginVertical: 20 },
   info: { fontSize: 15, color: '#4B5563', textAlign: 'center', lineHeight: 24, fontWeight: '500' },
-  backButton: { backgroundColor: '#6366F1', width: '100%', height: 54, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginBottom: 8, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 6 },
+  statusText: { fontSize: 14, color: '#10B981', fontWeight: '700', textAlign: 'center', marginTop: 16 },
+  buttonRow: { width: '100%', flexDirection: 'row', justifyContent: 'space-between', marginTop: 18 },
+  completeButton: { backgroundColor: '#D1FAE5', flex: 1, height: 54, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 8 },
+  completeButtonText: { color: '#047857', fontSize: 16, fontWeight: '700' },
+  deleteButton: { backgroundColor: '#FEE2E2', flex: 1, height: 54, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginLeft: 8 },
+  deleteButtonText: { color: '#B91C1C', fontSize: 16, fontWeight: '700' },
+  backButton: { backgroundColor: '#6366F1', width: '100%', height: 54, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginTop: 20, shadowColor: '#6366F1', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 6 },
   backButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' }
 });
