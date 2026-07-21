@@ -1,7 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Platform } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import TarefaItem from '../components/TarefaItem';
 
@@ -13,15 +12,19 @@ export default function TarefasScreen({ route, navigation }) {
   const [tarefas, setTarefas] = useState([]);
   const [filtroAtivo, setFiltroAtivo] = useState('todas'); 
 
-  const carregarTarefas = async () => {
+  // 🟢 ESCUTA O FIRESTORE EM TEMPO REAL
+  // Sempre que uma tarefa for adicionada, alterada ou concluída, a tela atualiza sozinha!
+  useEffect(() => {
     if (!emailIdentificador) return;
-    try {
-      // Busca no Firestore apenas as tarefas do usuário logado
-      const q = query(collection(db, 'tarefas'), where('email_usuario', '==', emailIdentificador));
-      const querySnapshot = await getDocs(q);
-      
+
+    const q = query(
+      collection(db, 'tarefas'), 
+      where('email_usuario', '==', emailIdentificador)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const listaTarefas = [];
-      querySnapshot.forEach((doc) => {
+      snapshot.forEach((doc) => {
         const data = doc.data();
         listaTarefas.push({
           id: doc.id,
@@ -31,17 +34,14 @@ export default function TarefasScreen({ route, navigation }) {
       });
 
       setTarefas(listaTarefas);
-    } catch (error) {
-      console.error("Erro ao carregar tarefas do Firestore:", error);
-    }
-  };
+    }, (error) => {
+      console.error("Erro ao escutar Firestore:", error);
+    });
 
-  useFocusEffect(
-    useCallback(() => {
-      carregarTarefas();
-    }, [emailIdentificador])
-  );
+    return () => unsubscribe();
+  }, [emailIdentificador]);
 
+  // 🟢 ADICIONAR TAREFA
   async function adicionarTarefa() {
     if (tarefa.trim() === '') {
       if (Platform.OS === 'web') alert('Por favor, digite uma tarefa antes de adicionar.');
@@ -50,21 +50,31 @@ export default function TarefasScreen({ route, navigation }) {
     }
 
     try {
-      // Adiciona o documento na coleção "tarefas" do Firestore
-      const docRef = await addDoc(collection(db, 'tarefas'), {
+      await addDoc(collection(db, 'tarefas'), {
         email_usuario: emailIdentificador,
         texto: tarefa,
         concluida: false,
         criadoEm: new Date()
       });
 
-      setTarefas([...tarefas, { id: docRef.id, nome: tarefa, concluida: false }]);
       setTarefa('');
     } catch (error) {
       if (Platform.OS === 'web') alert('Erro ao salvar tarefa no Firebase.');
       else Alert.alert('Erro', 'Não foi possível salvar no Firebase.');
     }
   }
+
+  // 🟢 ALTERNAR CONCLUÍDA / PENDENTE NO FIRESTORE
+  const alternarConcluida = async (id, statusAtual) => {
+    try {
+      const tarefaRef = doc(db, 'tarefas', id);
+      await updateDoc(tarefaRef, {
+        concluida: !statusAtual
+      });
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+    }
+  };
 
   const tarefasConcluidas = tarefas.filter((t) => t.concluida).length;
   const tarefasPendentes = tarefas.filter((t) => !t.concluida).length;
@@ -136,6 +146,7 @@ export default function TarefasScreen({ route, navigation }) {
             renderItem={({ item }) => (
               <TarefaItem 
                 item={item} 
+                onCheckToggle={() => alternarConcluida(item.id, item.concluida)} // Alterna o check
                 onPress={() => navigation.navigate('Detalhes', {
                   tarefa: item.nome, 
                   tarefaId: item.id,
