@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, Alert } from 'react-native';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
 export default function DetalhesScreen({ route, navigation }) {
   const { tarefa, tarefaId, concluida } = route.params;
@@ -13,29 +15,28 @@ export default function DetalhesScreen({ route, navigation }) {
     }
 
     try {
-      // Faz a requisição diretamente por aqui
-      const response = await fetch(`http://localhost:3000/tarefas/${tarefaId}/concluir`, { method: 'PUT' });
-      if (response.ok) {
-        setEstaConcluida(true);
-        // Volta para a tela anterior com segurança total
-        navigation.goBack(); 
-      }
+      // Atualiza o documento direto no Firestore
+      const docRef = doc(db, 'tarefas', tarefaId);
+      await updateDoc(docRef, { concluida: true });
+
+      setEstaConcluida(true);
+      navigation.goBack(); 
     } catch (error) {
       console.error(error);
-      if (Platform.OS === 'web') alert('Erro ao concluir tarefa no servidor.');
+      if (Platform.OS === 'web') alert('Erro ao concluir tarefa no Firebase.');
     }
   }
 
   async function handleExcluir() {
     try {
-      // Deleta diretamente por aqui
-      const response = await fetch(`http://localhost:3000/tarefas/${tarefaId}`, { method: 'DELETE' });
-      if (response.ok) {
-        navigation.goBack(); 
-      }
+      // Exclui o documento direto no Firestore
+      const docRef = doc(db, 'tarefas', tarefaId);
+      await deleteDoc(docRef);
+
+      navigation.goBack(); 
     } catch (error) {
       console.error(error);
-      if (Platform.OS === 'web') alert('Erro ao excluir tarefa no servidor.');
+      if (Platform.OS === 'web') alert('Erro ao excluir tarefa no Firebase.');
     }
   }
 

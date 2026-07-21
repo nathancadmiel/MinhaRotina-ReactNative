@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, Alert, Platform } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { collection, addDoc, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 import TarefaItem from '../components/TarefaItem';
 
 export default function TarefasScreen({ route, navigation }) {
-  // Inicializa o estado apenas UMA vez com o valor da rota.
-  // Depois disso, o estado local manda no jogo e nunca mais é zerado.
-  const [emailIdentificador] = useState(route.params?.emailUsuario || '');
-  const [nomeDoUsuario] = useState(route.params?.nomeUsuario || '');
+  const emailIdentificador = route.params?.emailUsuario || '';
+  const nomeDoUsuario = emailIdentificador ? emailIdentificador.split('@')[0] : 'Usuário';
 
   const [tarefa, setTarefa] = useState('');
   const [tarefas, setTarefas] = useState([]);
@@ -16,18 +16,26 @@ export default function TarefasScreen({ route, navigation }) {
   const carregarTarefas = async () => {
     if (!emailIdentificador) return;
     try {
-      const response = await fetch(`http://localhost:3000/tarefas/${emailIdentificador}`);
-      if (response.ok) {
-        const data = await response.json();
-        setTarefas(data);
-      }
+      // Busca no Firestore apenas as tarefas do usuário logado
+      const q = query(collection(db, 'tarefas'), where('email_usuario', '==', emailIdentificador));
+      const querySnapshot = await getDocs(q);
+      
+      const listaTarefas = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        listaTarefas.push({
+          id: doc.id,
+          nome: data.texto,
+          concluida: data.concluida || false
+        });
+      });
+
+      setTarefas(listaTarefas);
     } catch (error) {
-      console.error("Erro de conexão ao carregar tarefas:", error);
+      console.error("Erro ao carregar tarefas do Firestore:", error);
     }
   };
 
-  // Esse hook roda SEMPRE que o usuário volta para esta tela, 
-  // atualizando a lista automaticamente após concluir ou excluir!
   useFocusEffect(
     useCallback(() => {
       carregarTarefas();
@@ -41,26 +49,20 @@ export default function TarefasScreen({ route, navigation }) {
       return;
     }
 
-    if (!emailIdentificador) {
-      if (Platform.OS === 'web') alert('Erro: Sessão do usuário perdida. Faça login novamente.');
-      return;
-    }
-
     try {
-      const response = await fetch('http://localhost:3000/tarefas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email_usuario: emailIdentificador, texto: tarefa }),
+      // Adiciona o documento na coleção "tarefas" do Firestore
+      const docRef = await addDoc(collection(db, 'tarefas'), {
+        email_usuario: emailIdentificador,
+        texto: tarefa,
+        concluida: false,
+        criadoEm: new Date()
       });
 
-      if (response.ok) {
-        const novaTarefaSalva = await response.json();
-        setTarefas([...tarefas, novaTarefaSalva]);
-        setTarefa('');
-      }
+      setTarefas([...tarefas, { id: docRef.id, nome: tarefa, concluida: false }]);
+      setTarefa('');
     } catch (error) {
-      if (Platform.OS === 'web') alert('Erro ao salvar tarefa no banco.');
-      else Alert.alert('Erro', 'Não foi possível salvar a tarefa no servidor.');
+      if (Platform.OS === 'web') alert('Erro ao salvar tarefa no Firebase.');
+      else Alert.alert('Erro', 'Não foi possível salvar no Firebase.');
     }
   }
 
@@ -77,7 +79,7 @@ export default function TarefasScreen({ route, navigation }) {
     <View style={styles.outerContainer}>
       <View style={styles.phoneMockup}>
         <View style={styles.headerArea}>
-          <Text style={styles.welcome}>Olá, {nomeDoUsuario || (emailIdentificador ? emailIdentificador.split('@')[0] : 'Usuário')}! 👋</Text>
+          <Text style={styles.welcome}>Olá, {nomeDoUsuario}! 👋</Text>
           <View style={styles.subtitleRow}>
             <Text style={styles.subtitle}>Organize o seu dia.</Text>
             <TouchableOpacity onPress={() => setFiltroAtivo('todas')}>
@@ -128,14 +130,14 @@ export default function TarefasScreen({ route, navigation }) {
         ) : (
           <FlatList
             data={tarefasFiltradas}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={(item) => item.id}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
             renderItem={({ item }) => (
               <TarefaItem 
                 item={item} 
                 onPress={() => navigation.navigate('Detalhes', {
-                  tarefa: item.texto || item.nome, 
+                  tarefa: item.nome, 
                   tarefaId: item.id,
                   concluida: item.concluida
                 })}

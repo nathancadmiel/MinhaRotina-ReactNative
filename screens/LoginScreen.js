@@ -1,6 +1,7 @@
-// screens/LoginScreen.js
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig'; // Importa o Firebase Auth configurado
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -8,45 +9,26 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     if (!email || !senha) {
-      if (Platform.OS === 'web') {
-        alert('Atenção: Preencha todos os campos.');
-      } else {
-        Alert.alert('Atenção', 'Preencha todos os campos.');
-      }
+      if (Platform.OS === 'web') alert('Atenção: Preencha todos os campos.');
+      else Alert.alert('Atenção', 'Preencha todos os campos.');
       return;
     }
 
     try {
-      // Faz a requisição para o servidor Node.js
-      const response = await fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ email, senha }),
-      });
+      // Faz login diretamente no Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const user = userCredential.user;
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Se der certo, redireciona para a HomeScreen
-        navigation.replace('Home', { emailUsuario: data.email });
-      } else {
-        // Se o banco de dados recusar (ex: usuário não existe ou senha errada)
-        if (Platform.OS === 'web') {
-          alert('Erro no Login: ' + (data.error || 'Credenciais inválidas.'));
-        } else {
-          Alert.alert('Erro no Login', data.error || 'Credenciais inválidas.');
-        }
-      }
+      // Navega para a Home passando o e-mail logado
+      navigation.replace('Home', { emailUsuario: user.email });
     } catch (error) {
-      // Se o servidor backend estiver desligado
-      if (Platform.OS === 'web') {
-        alert('Erro de Conexão: Não foi possível se comunicar com o banco de dados. Verifique se o node server.js está rodando.');
-      } else {
-        Alert.alert('Erro de Conexão', 'Não foi possível se comunicar com o banco de dados.');
+      let mensagemErro = 'Ocorreu um erro ao tentar entrar.';
+      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        mensagemErro = 'E-mail ou senha incorretos.';
       }
+
+      if (Platform.OS === 'web') alert('Erro no Login: ' + mensagemErro);
+      else Alert.alert('Erro no Login', mensagemErro);
     }
   };
 
@@ -54,7 +36,6 @@ export default function LoginScreen({ navigation }) {
     <KeyboardAvoidingView behavior="padding" style={styles.outerContainer}>
       <View style={styles.phoneMockup}>
         <View style={styles.content}>
-          
           <View style={styles.header}>
             <Text style={styles.title}>🔐 Login</Text>
             <Text style={styles.desc}>Acesse sua conta para gerenciar sua rotina diária.</Text>
@@ -86,12 +67,10 @@ export default function LoginScreen({ navigation }) {
               <Text style={styles.buttonText}>Entrar no App ➔</Text>
             </TouchableOpacity>
 
-            {/* Novo botão adicionado para redirecionar para a Tela de Cadastro */}
             <TouchableOpacity style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
               <Text style={styles.registerLinkText}>Não tem uma conta? Cadastre-se aqui</Text>
             </TouchableOpacity>
           </View>
-
         </View>
       </View>
     </KeyboardAvoidingView>
